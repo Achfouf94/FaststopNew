@@ -1,0 +1,30 @@
+name: 🍎 Build iOS IPA
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign
+      - name: Create IPA
+        run: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r FastStop-unsigned.ipa Payload/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FastStop-iOS-IPA
+          path: build/ios/iphoneos/FastStop-unsigned.ipa
+          retention-days: 30
